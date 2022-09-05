@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
 
 
     int listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    printf("listen fd: %d\n", listenfd);
 
     int ret = 0;
     struct sockaddr_in address;
@@ -91,6 +92,7 @@ int main(int argc, char* argv[]) {
     epoll_event events[MAX_EVENT_NUMBER];
     int epollfd = epoll_create(5);
     http_conn::m_epollfd = epollfd;
+    printf("epollfd: %d\n", epollfd);
 
     // 将监听文件描述符（listenfd）添加到epoll对象中
     addfd(epollfd, listenfd, false);
@@ -99,6 +101,7 @@ int main(int argc, char* argv[]) {
     ret = socketpair(PF_UNIX, SOCK_STREAM, 0, pipefd);
     setnonblocking(pipefd[1]);
     addfd(epollfd, pipefd[0], false);
+    printf("pipefd: %d、%d\n", pipefd[0], pipefd[1]);
 
     // 设置信号处理函数
     addsig(SIGALRM, sig_handler);
@@ -121,6 +124,7 @@ int main(int argc, char* argv[]) {
                 struct sockaddr_in client_address;
                 socklen_t client_addrlength = sizeof(client_address);
                 int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlength);
+                printf("新建客户端连接fd: %d\n", connfd);
                 if (connfd < 0) {
                     printf("errno is: %d\n", errno);
                     continue;

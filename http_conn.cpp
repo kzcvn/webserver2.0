@@ -34,7 +34,6 @@ void addfd(int epollfd, int fd, bool one_shot) {
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
     // 设置文件描述符非阻塞（因为需要通过while循环一次性读出所有数据，如果不设置，读到没数据时会阻塞）
     setnonblocking(fd);
-    //printf("新建fd:%d\n",fd);//test-------------
 }
 
 // 从epoll中移除监听的文件描述符
@@ -428,6 +427,7 @@ bool http_conn::add_headers(int content_len) {
     add_content_type();
     add_linger();
     add_blank_line();
+    return true;
 }
 
 bool http_conn::add_content_length(int content_len) {
