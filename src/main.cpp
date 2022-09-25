@@ -100,7 +100,7 @@ int main( int argc, char* argv[] ) {
             
             int sockfd = events[i].data.fd;
             
-            if( sockfd == listenfd ) {    //监听描述符            
+            if( sockfd == listenfd ) {    //1、监听描述符            
                 struct sockaddr_in client_address;
                 socklen_t client_addrlength = sizeof( client_address );
                 int connfd = accept( listenfd, ( struct sockaddr* )&client_address, &client_addrlength ); 
@@ -120,7 +120,7 @@ int main( int argc, char* argv[] ) {
                 que.push(users + connfd);
             } 
 
-            else if (sockfd == pipefd[0] && (events[i].events & EPOLLIN)) { //读管道
+            else if (sockfd == pipefd[0] && (events[i].events & EPOLLIN)) { //2、读管道
                 int sig;
                 char signals[1024];
                 ret = recv(pipefd[0], signals, sizeof(signals), 0);
@@ -135,12 +135,12 @@ int main( int argc, char* argv[] ) {
                 }
             }
 
-            else if( events[i].events & ( EPOLLRDHUP | EPOLLHUP | EPOLLERR ) ) {  //断开连接
+            else if( events[i].events & ( EPOLLRDHUP | EPOLLHUP | EPOLLERR ) ) {  //3、断开连接
                 users[sockfd].close_conn();
             }
 
-            else if(events[i].events & EPOLLIN) {   //读数据，添加到工作队列，调整该连接对应的定时器，以延迟该连接被关闭的时间。
-                if(users[sockfd].read()) {
+            else if(events[i].events & EPOLLIN) {   //4、读数据，添加到工作队列，调整该连接对应的定时器，以延迟该连接被关闭的时间。
+                if(users[sockfd].httpread()) {
                     pool->append(users + sockfd);
                     time_t cur = time(NULL);
                     users[sockfd].close_time = cur + 3 * TIMESLOT;
@@ -150,8 +150,8 @@ int main( int argc, char* argv[] ) {
                 }
             } 
 
-            else if( events[i].events & EPOLLOUT ) {  //写数据
-                if( !users[sockfd].write() ) {
+            else if( events[i].events & EPOLLOUT ) {  //5、写数据
+                if( !users[sockfd].httpwrite() ) {
                     users[sockfd].close_conn();
                 }
             }

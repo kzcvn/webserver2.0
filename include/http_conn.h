@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -63,8 +64,8 @@ public:
     void init(int sockfd, const sockaddr_in& addr); // 初始化新接受的连接
     void close_conn();  // 关闭连接
     void process();    // 处理客户端请求
-    bool read();      // 非阻塞读
-    bool write();    // 非阻塞写
+    bool httpread();      // 非阻塞读
+    bool httpwrite();    // 非阻塞写
 
 private:
     void init();                           // 初始化连接
@@ -78,6 +79,9 @@ private:
     HTTP_CODE do_request();
     char* get_line() { return m_read_buf + m_start_line; }
     LINE_STATUS parse_line();
+    void execute_cgi();
+    void bad_request();
+    void cannot_execute();
 
     // 这一组函数被process_write调用以填充HTTP应答。
     void unmap();
@@ -106,9 +110,11 @@ private:
 
     CHECK_STATE m_check_state;              // 主状态机当前所处的状态
     METHOD m_method;                        // 请求方法
+    int m_cgi = 0;
 
     char m_real_file[ FILENAME_LEN ];       // 客户请求的目标文件的完整路径，其内容等于 doc_root + m_url, doc_root是网站根目录
     char* m_url;                            // 客户请求的目标文件的文件名
+    char* m_query_string = NULL;            // 
     char* m_version;                        // HTTP协议版本号，我们仅支持HTTP1.1
     char* m_host;                           // 主机名
     int m_content_length;                   // HTTP请求的消息总长度
